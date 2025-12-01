@@ -29,7 +29,7 @@
                         <p class="card-text text-primary fw-bold">
                             Rp {{ number_format($item->price, 0, ',', '.') }}
                         </p>
-                        <a href="#" class="btn btn-outline-primary w-100">Detail</a>
+                        <a href="{{ route('product.show', $item->slug) }}" class="btn btn-outline-primary w-100">Detail</a>
                     </div>
                 </div>
             </div>

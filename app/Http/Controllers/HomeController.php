@@ -15,4 +15,15 @@ class HomeController extends Controller
             'products' => $products
         ]);
     }
+
+    public function show($slug)
+    {
+        // Cari produk berdasarkan slug-nya
+        // Kalau gak ketemu, otomatis 404 Not Found
+        $product = Product::where('slug', $slug)->firstOrFail();
+
+        return view('details', [
+            'product' => $product
+        ]);
+    }
 }
