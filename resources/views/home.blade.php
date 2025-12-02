@@ -9,13 +9,22 @@
     @vite(['resources/css/style.css'])
 </head>
 <body>
-    <nav class="navbar navbar-dark">
-        <div class="container">
-            <a class="navbar-brand" href="#">
-                <span style="font-size: 2rem;">🛒</span>
-                <span>Laravel Mart</span>
-            </a>
+    <nav class="navbar navbar-dark bg-primary mb-4">
+    <div class="container d-flex justify-content-between">
+        <a class="navbar-brand fw-bold" href="{{ route('home') }}">🛒 Laravel Mart</a>
+
+        <div>
+            @auth
+                <span class="text-white me-3">Halo, {{ Auth::user()->name }} 👋</span>
+                <form action="{{ route('logout') }}" method="POST" class="d-inline">
+                    @csrf
+                    <button class="btn btn-danger btn-sm">Logout</button>
+                </form>
+            @else
+                <a href="{{ route('login') }}" class="btn btn-light btn-sm text-primary fw-bold">Login</a>
+            @endauth
         </div>
+    </div>
     </nav>
 
     <div class="container mt-4">

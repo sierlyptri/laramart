@@ -63,14 +63,22 @@
                         </div>
                     </div>
 
-                    <div class="action-buttons">
-                        <button class="btn-add-cart">
-                            <span style="font-size: 1.3rem;">🛒</span>
-                            <span>Masukkan Keranjang</span>
-                        </button>
-                        <button class="btn-buy-now">
-                            Beli Sekarang
-                        </button>
+                    <div class="action-buttons d-flex gap-3">
+                        
+                        <form action="{{ route('cart.add', $product->id) }}" method="POST">
+                            @csrf <button type="submit" class="btn-add-cart">
+                                <span style="font-size: 1.3rem;">🛒</span>
+                                <span>Masukkan Keranjang</span>
+                            </button>
+                        </form>
+
+                        <form action="{{ route('cart.add', $product->id) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="btn-buy-now">
+                                Beli Sekarang
+                            </button>
+                        </form>
+
                     </div>
 
                     <!-- Info Icons -->
