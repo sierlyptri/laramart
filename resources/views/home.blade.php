@@ -9,7 +9,6 @@
     @vite(['resources/css/style.css'])
 </head>
 <body>
-
     <nav class="navbar navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="#">
@@ -37,7 +36,7 @@
                 <div class="product-card shadow-sm">
                     <div class="img-wrapper">
                         <span class="category-badge">{{ $item->category->name }}</span>
-                        <img src="https://via.placeholder.com/300/6366f1/ffffff?text={{ urlencode($item->name) }}" class="card-img-top" alt="{{ $item->name }}">
+                        <img src="{{ asset('images/' . $item->image) }}" class="card-img-top" alt="{{ $item->name }}" style="height: 200px; object-fit: cover;">
                     </div>
                     
                     <div class="card-body">
@@ -56,7 +55,7 @@
     </div>
 
     <div class="container mt-5 mb-5 text-center">
-        <p class="text-muted">© 2024 Laravel Mart. Semua hak dilindungi.</p>
+        <p class="text-muted">© 2024 Laravel Mart. Sierly Putri Anjani</p>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
