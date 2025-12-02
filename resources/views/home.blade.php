@@ -3,33 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laravel Mart</title>
+    <title>Laravel Mart - Modern E-Commerce</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    @vite(['resources/css/style.css'])
 </head>
 <body>
 
-    <nav class="navbar navbar-dark bg-primary mb-4">
+    <nav class="navbar navbar-dark">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="#">🛒 Laravel Mart</a>
+            <a class="navbar-brand" href="#">
+                <span style="font-size: 2rem;">🛒</span>
+                <span>Laravel Mart</span>
+            </a>
         </div>
     </nav>
 
-    <div class="container">
-        <h2 class="mb-4">Produk Terbaru</h2>
+    <div class="container mt-4">
+        <div class="hero-section text-center">
+            <h1 class="floating-animation">Temukan Produk Favoritmu</h1>
+            <p class="lead text-muted">Belanja mudah, cepat, dan terpercaya</p>
+            
+            <div class="search-bar">
+                <input type="text" class="form-control" placeholder="🔍 Cari produk...">
+            </div>
+        </div>
+
+        <h2 class="section-title">Produk Terbaru</h2>
         
-        <div class="row">
+        <div class="row g-4">
             @foreach($products as $item)
-            <div class="col-md-3 mb-4">
-                <div class="card h-100 shadow-sm">
-                    <img src="https://via.placeholder.com/300" class="card-img-top" alt="...">
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <div class="product-card shadow-sm">
+                    <div class="img-wrapper">
+                        <span class="category-badge">{{ $item->category->name }}</span>
+                        <img src="https://via.placeholder.com/300/6366f1/ffffff?text={{ urlencode($item->name) }}" class="card-img-top" alt="{{ $item->name }}">
+                    </div>
                     
                     <div class="card-body">
-                        <small class="text-muted">{{ $item->category->name }}</small>
-                        <h5 class="card-title mt-1">{{ $item->name }}</h5>
-                        <p class="card-text text-primary fw-bold">
+                        <h5 class="product-title">{{ $item->name }}</h5>
+                        <p class="product-price">
                             Rp {{ number_format($item->price, 0, ',', '.') }}
                         </p>
-                        <a href="{{ route('product.show', $item->slug) }}" class="btn btn-outline-primary w-100">Detail</a>
+                        <a href="{{ route('product.show', $item->slug) }}" class="btn btn-detail">
+                            Lihat Detail →
+                        </a>
                     </div>
                 </div>
             </div>
@@ -37,5 +55,10 @@
         </div>
     </div>
 
+    <div class="container mt-5 mb-5 text-center">
+        <p class="text-muted">© 2024 Laravel Mart. Semua hak dilindungi.</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
