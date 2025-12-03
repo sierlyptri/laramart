@@ -8,5 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class OrderItem extends Model
 {
     use HasFactory;
-    protected $guarded = []; // Izinkan semua kolom diisi
+    protected $guarded = [];
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
 }

@@ -8,65 +8,107 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB; // Wajib import DB buat Transaction
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
-    public function checkout()
+    // 1. Tampilkan Halaman Form Checkout (Isi Alamat)
+    public function checkoutPage()
     {
-        // 1. Ambil keranjang user
-        $cartItems = Cart::where('user_id', Auth::id())->get();
+        // Cek keranjang dulu
+        $cartItems = Cart::with('product')->where('user_id', Auth::id())->get();
 
-        // Kalau keranjang kosong, tendang balik
+        // Kalau kosong, usir ke home
+        if ($cartItems->isEmpty()) {
+            return redirect()->route('home')->with('error', 'Keranjang kamu kosong nih!');
+        }
+
+        return view('checkout_page', [
+            'cartItems' => $cartItems
+        ]);
+    }
+
+    // 2. Proses Checkout (Simpan ke Database)
+    public function processCheckout(Request $request)
+    {
+        // Validasi: Alamat wajib diisi minimal 10 karakter
+        $request->validate([
+            'shipping_address' => 'required|string|min:10',
+        ]);
+
+        // Ambil keranjang user
+        $cartItems = Cart::with('product')->where('user_id', Auth::id())->get();
+
         if ($cartItems->isEmpty()) {
             return back()->with('error', 'Keranjang kamu kosong nih!');
         }
 
-        // START TRANSACTION (Mulai proses aman)
+        // START TRANSACTION
         try {
             DB::beginTransaction();
 
-            // 2. Hitung Total Harga
+            // Hitung Total Harga
             $totalPrice = 0;
             foreach ($cartItems as $item) {
                 $totalPrice += ($item->product->price * $item->quantity);
             }
 
-            // 3. Buat Data Order Utama (Header)
+            // Buat Data Order Utama
             $order = Order::create([
                 'user_id' => Auth::id(),
-                'code' => 'INV-' . time(), // Bikin nomor invoice unik pake waktu
+                'code' => 'INV-' . time(),
                 'total_price' => $totalPrice,
                 'status' => 'pending',
-                'shipping_address' => 'Alamat default user (Nanti bisa dibikin form)',
+                // 👇 AMBIL ALAMAT DARI FORM INPUT USER
+                'shipping_address' => $request->shipping_address, 
             ]);
 
-            // 4. Pindahkan isi Keranjang ke Order Items (Detail)
+            // Pindahkan isi Keranjang ke Order Items
             foreach ($cartItems as $item) {
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $item->product_id,
                     'quantity' => $item->quantity,
-                    'price_at_purchase' => $item->product->price, // Penting! Harga saat beli
+                    'price_at_purchase' => $item->product->price,
                 ]);
 
-                // 5. Kurangi Stok Produk (Opsional tapi keren)
+                // Kurangi Stok Produk
                 $product = Product::find($item->product_id);
-                $product->decrement('stock', $item->quantity);
+                // Cek stok cukup gak (optional safety)
+                if($product->stock >= $item->quantity) {
+                     $product->decrement('stock', $item->quantity);
+                }
             }
 
-            // 6. Kosongkan Keranjang
+            // Kosongkan Keranjang
             Cart::where('user_id', Auth::id())->delete();
 
-            // Kalau semua lancar, RESMIKAN datanya
             DB::commit();
 
-            return redirect()->route('home')->with('success', 'Checkout Berhasil! Nomor Invoice: ' . $order->code);
+            // Lempar ke Halaman Invoice
+            return redirect()->route('order.show', $order->id)->with('success', 'Checkout Berhasil!');
 
         } catch (\Exception $e) {
-            // Kalau ada error, BATALKAN semua perubahan database
             DB::rollBack();
             return back()->with('error', 'Gagal checkout: ' . $e->getMessage());
         }
+    }
+
+    // 3. Tampilkan Invoice
+    public function show($id)
+    {
+        $order = Order::with('user')->findOrFail($id);
+        
+        // Pastikan user cuma bisa liat order punya sendiri (Security)
+        if ($order->user_id != Auth::id()) {
+            abort(403, 'Akses Ditolak');
+        }
+
+        $orderItems = OrderItem::with('product')->where('order_id', $id)->get();
+
+        return view('invoice', [
+            'order' => $order,
+            'orderItems' => $orderItems
+        ]);
     }
 }

@@ -7,13 +7,18 @@ use App\Models\Product;
 
 class HomeController extends Controller
 {
-    public function index()
+    public function index(Request $request) 
     {
-        $products = Product::with('category')->latest()->get();
+        // jika ada filter pencarian
+        $search = $request->query('search');
 
-        return view('home', [
-            'products' => $products
-        ]);
+        $products = Product::query()
+            ->when($search, fn($q, $s) => $q->where('name', 'like', '%' . $s . '%'))
+            ->orderBy('created_at', 'desc')
+            // ->get(); // gunakan ini jika ingin semua
+            ->paginate(12); // atau paginate agar tidak memuat semua sekaligus
+
+        return view('home', compact('products'));
     }
 
     public function show($slug)
