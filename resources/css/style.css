@@ -381,6 +381,53 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* --- HERO SECTION --- */
+.hero-section {
+    /* sedikit rampingkan padding agar hero tidak terlalu memakan ruang */
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border-radius: 24px;
+    margin: 2rem 0;
+    padding: 2.5rem 1.75rem; /* reduced from larger value */
+    position: relative;
+    overflow: hidden;
+    color: white;
+}
+
+/* ukuran judul disesuaikan dengan breakpoint agar responsive dan tidak terlalu besar */
+.hero-text h1 {
+    font-weight: 900;
+    line-height: 1.12;
+    margin-bottom: 0.5rem;
+    font-size: 2.2rem; /* default (mobile / small screens) */
+}
+
+/* tablet */
+@media (min-width: 768px) {
+    .hero-section {
+        padding: 3.25rem 2.5rem;
+    }
+    .hero-text h1 {
+        font-size: 2.8rem;
+    }
+}
+
+/* desktop / large */
+@media (min-width: 1200px) {
+    .hero-section {
+        padding: 3.75rem 3rem;
+    }
+    .hero-text h1 {
+        font-size: 3.4rem; /* maksimal untuk layar besar */
+    }
+}
+
+/* sedikit tweak untuk subtitle agar tidak terlalu jauh */
+.hero-section .lead {
+    color: rgba(255,255,255,0.9);
+    margin-bottom: 1rem;
+    font-size: 1.02rem;
+}
+
 /* --- RESPONSIVE ADJUSTMENTS --- */
 @media (max-width: 768px) {
     .navbar-brand {

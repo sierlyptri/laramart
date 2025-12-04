@@ -5,42 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laravel Mart - Modern E-Commerce</title>
     
-    <!-- Bootstrap 5.3 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     
     @vite(['resources/css/style.css', 'resources/js/app.js'])
+
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
 </head>
 <body>
-    <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-light sticky-top">
         <div class="container">
-            <!-- Brand Logo -->
             <a class="navbar-brand" href="{{ route('home') }}">
-                <i class="bi bi-cart3 me-2"></i> Laravel Mart
+                <i class="bi bi-cart3 me-2"></i> 
+                <strong>LaraMart</strong>
             </a>
-            
-            <!-- Search Bar (Pill-shaped, next to logo) -->
-            <!-- OPTION 1: Use home route with GET parameter -->
-            <div class="search-container">
-                <form action="{{ route('home') }}" method="GET" class="d-flex w-100">
-                    <input class="form-control search-pill me-2" type="search" placeholder="Search products..." 
-                           aria-label="Search" name="search">
-                    <button class="btn btn-outline-primary d-none d-md-block" type="submit">
-                        <i class="bi bi-search"></i>
-                    </button>
-                </form>
-            </div>
             
             <!-- Right Side Nav Items -->
             <div class="d-flex align-items-center ms-auto">
                 <!-- Cart Icon with Badge -->
-                <!-- OPTION 1: Use static badge -->
                 <a href="#" class="position-relative me-4">
                     <i class="bi bi-cart3 fs-4 text-primary"></i>
                     <span class="cart-badge">3</span>
                 </a>
+
+                <!-- Search Bar (Moved to Right) -->
+                <div class="search-container me-4">
+                    <form action="{{ route('home') }}" method="GET" class="d-flex w-100">
+                        <input class="form-control search-pill me-2" type="search" placeholder="Search products..." 
+                               aria-label="Search" name="search">
+                        <button class="btn btn-search d-none d-md-block" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </form>
+                </div>
                 
                 <!-- Authentication Logic -->
                 @auth
@@ -76,13 +75,17 @@
                     </div>
                 @else
                     <!-- Login Button for Guests -->
-                    <div class="d-flex">
+                    <div class="d-flex gap-2 align-items-center">
                         @if (Route::has('login'))
-                            <a href="{{ route('login') }}" class="btn btn-outline-primary me-2">Login</a>
+                            <a href="{{ route('login') }}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Login
+                            </a>
                         @endif
 
                         @if (Route::has('register'))
-                            <a href="{{ route('register') }}" class="btn btn-primary">Register</a>
+                            <a href="{{ route('register') }}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-person-plus me-1"></i> Sign Up
+                            </a>
                         @endif
                     </div>
                 @endauth
