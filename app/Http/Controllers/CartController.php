@@ -3,42 +3,112 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Cart;
-use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
 {
+    /**
+     * View cart
+     */
     public function index()
     {
-        $cartItems = Cart::with('product')->where('user_id', Auth::id())->get();
-        
-        return view('cart', [
-            'cartItems' => $cartItems
-        ]);
-    }
+        $cart = session()->get('cart', []);
+        $total = 0;
+        $items = [];
 
-    public function store(Request $request, $productId)
-    {
-        $existingCart = Cart::where('user_id', Auth::id())
-                            ->where('product_id', $productId)
-                            ->first();
-
-        if ($existingCart) {
-            $existingCart->increment('quantity');
-        } else {
-            Cart::create([
-                'user_id' => Auth::id(),
-                'product_id' => $productId,
-                'quantity' => 1
-            ]);
+        foreach ($cart as $item) {
+            $product = \App\Models\Product::find($item['product_id']);
+            if ($product) {
+                $items[] = [
+                    'product' => $product,
+                    'quantity' => $item['quantity'],
+                    'subtotal' => $product->price * $item['quantity'],
+                ];
+                $total += $product->price * $item['quantity'];
+            }
         }
 
-        return redirect()->route('cart.index')->with('success', 'Barang masuk keranjang!');
+        return view('cart.index', compact('items', 'total', 'cart'));
     }
 
-    public function destroy($id)
+    /**
+     * Add item to cart
+     */
+    public function add(Request $request)
     {
-        Cart::find($id)->delete();
-        return back()->with('success', 'Barang dihapus!');
+        $validated = $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        $product = \App\Models\Product::findOrFail($validated['product_id']);
+
+        // Check stock
+        if ($product->stock < $validated['quantity']) {
+            return redirect()->back()->with('error', 'Not enough stock available!');
+        }
+
+        $cart = session()->get('cart', []);
+
+        // Check if product already in cart
+        if (isset($cart[$product->id])) {
+            $cart[$product->id]['quantity'] += $validated['quantity'];
+        } else {
+            $cart[$product->id] = [
+                'product_id' => $product->id,
+                'quantity' => $validated['quantity'],
+            ];
+        }
+
+        session()->put('cart', $cart);
+
+        return redirect()->back()->with('success', 'Product added to cart!');
+    }
+
+    /**
+     * Remove item from cart
+     */
+    public function remove($productId)
+    {
+        $cart = session()->get('cart', []);
+        unset($cart[$productId]);
+        session()->put('cart', $cart);
+
+        return redirect()->back()->with('success', 'Product removed from cart!');
+    }
+
+    /**
+     * Update cart item quantity
+     */
+    public function update(Request $request, $productId)
+    {
+        $validated = $request->validate([
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        $product = \App\Models\Product::findOrFail($productId);
+
+        // Check stock
+        if ($product->stock < $validated['quantity']) {
+            return redirect()->back()->with('error', 'Not enough stock available!');
+        }
+
+        $cart = session()->get('cart', []);
+
+        if (isset($cart[$productId])) {
+            $cart[$productId]['quantity'] = $validated['quantity'];
+        }
+
+        session()->put('cart', $cart);
+
+        return redirect()->back()->with('success', 'Cart updated!');
+    }
+
+    /**
+     * Clear entire cart
+     */
+    public function clear()
+    {
+        session()->forget('cart');
+        return redirect()->back()->with('success', 'Cart cleared!');
     }
 }
