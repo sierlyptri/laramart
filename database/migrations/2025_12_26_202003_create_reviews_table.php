@@ -11,14 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('orders', function (Blueprint $table) {
+        Schema::create('reviews', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('code')->unique();
-            $table->decimal('total_price', 15, 2);
-            $table->enum('status', ['pending', 'paid', 'shipped', 'cancelled'])->default('pending');
-            $table->enum('payment_status', ['unpaid', 'paid'])->default('unpaid');
-            $table->text('shipping_address');
+            $table->foreignId('product_id')->constrained()->onDelete('cascade');
+            $table->integer('rating')->min(1)->max(5);
+            $table->text('comment')->nullable();
             $table->timestamps();
         });
     }
@@ -28,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('orders');
+        Schema::dropIfExists('reviews');
     }
 };
