@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -16,14 +17,71 @@ class ProductController extends Controller
     {
         $query = Product::query();
         $search = $request->input('search');
+        $categoryParam = $request->query('category'); // expects slug or id
+        $minPrice = $request->input('min_price');
+        $maxPrice = $request->input('max_price');
+        $sortBy = $request->input('sort_by', 'latest'); // latest, price_asc, price_desc
+        
+        $categories = \App\Models\Category::orderBy('name')->get();
+        $selectedCategory = null;
 
         if ($search) {
-            $query->where('name', 'like', '%' . $search . '%')
-                  ->orWhere('description', 'like', '%' . $search . '%');
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
         }
 
-        $products = $query->paginate(12);
-        return view('products.index', compact('products', 'search'));
+        if ($categoryParam) {
+            // try slug first, fallback to id if numeric
+            $selectedCategory = \App\Models\Category::where('slug', $categoryParam)
+                ->orWhere('id', $categoryParam)
+                ->first();
+
+            if ($selectedCategory) {
+                $query->where('category_id', $selectedCategory->id);
+            }
+        }
+
+        // Price filter
+        if ($minPrice) {
+            $query->where('price', '>=', $minPrice);
+        }
+        if ($maxPrice) {
+            $query->where('price', '<=', $maxPrice);
+        }
+
+        // Sort by
+        switch ($sortBy) {
+            case 'price_asc':
+                $query->orderBy('price', 'asc');
+                break;
+            case 'price_desc':
+                $query->orderBy('price', 'desc');
+                break;
+            case 'name_asc':
+                $query->orderBy('name', 'asc');
+                break;
+            case 'latest':
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+
+        $products = $query->paginate(12)->withQueryString();
+
+        // pass both categories and selected id (views may use either)
+        $categoryId = $selectedCategory ? $selectedCategory->id : null;
+        return view('products.index', compact(
+            'products',
+            'search',
+            'categories',
+            'categoryId',
+            'categoryParam',
+            'minPrice',
+            'maxPrice',
+            'sortBy'
+        ));
     }
 
     /**
@@ -45,14 +103,20 @@ class ProductController extends Controller
     {
         $query = Product::query();
         $search = $request->input('search');
+        $categoryId = $request->input('category');
+        $categories = Category::all();
 
         if ($search) {
             $query->where('name', 'like', '%' . $search . '%')
                   ->orWhere('description', 'like', '%' . $search . '%');
         }
 
+        if ($categoryId) {
+            $query->where('category_id', $categoryId);
+        }
+
         $products = $query->paginate(15);
-        return view('admin.products.index', compact('products', 'search'));
+        return view('admin.products.index', compact('products', 'search', 'categories', 'categoryId'));
     }
 
     /**
@@ -60,7 +124,8 @@ class ProductController extends Controller
      */
     public function create()
     {
-        return view('admin.products.create');
+        $categories = Category::all();
+        return view('admin.products.create', compact('categories'));
     }
 
     /**
@@ -73,7 +138,8 @@ class ProductController extends Controller
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'category_id' => 'nullable|exists:categories,id',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048|dimensions:min_width=600,min_height=600,max_width=2000,max_height=2000',
         ]);
 
         // Generate slug
@@ -96,7 +162,8 @@ class ProductController extends Controller
      */
     public function edit(Product $product)
     {
-        return view('admin.products.edit', compact('product'));
+        $categories = Category::all();
+        return view('admin.products.edit', compact('product', 'categories'));
     }
 
     /**
@@ -109,7 +176,8 @@ class ProductController extends Controller
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'category_id' => 'nullable|exists:categories,id',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048|dimensions:min_width=600,min_height=600,max_width=2000,max_height=2000',
         ]);
 
         // Handle image upload

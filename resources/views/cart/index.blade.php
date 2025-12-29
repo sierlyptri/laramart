@@ -1,126 +1,156 @@
 @extends('layouts.app')
 
-@section('title', 'Shopping Cart - Laramart')
+@section('title', 'Products - Laramart')
 
 @section('content')
-<h1 class="text-4xl font-bold mb-8">Shopping Cart</h1>
+<div class="mb-8">
+    <h1 class="text-4xl font-bold mb-4">All Products</h1>
+    <p class="text-gray-600">Browse our collection of quality products</p>
+</div>
 
-@if(count($cart) > 0)
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Cart Items -->
-        <div class="lg:col-span-2">
-            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-                <table class="w-full">
-                    <thead class="bg-gray-100 border-b">
-                        <tr>
-                            <th class="px-6 py-4 text-left">Product</th>
-                            <th class="px-6 py-4 text-left">Price</th>
-                            <th class="px-6 py-4 text-left">Quantity</th>
-                            <th class="px-6 py-4 text-left">Subtotal</th>
-                            <th class="px-6 py-4 text-center">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($items as $item)
-                            <tr class="border-b hover:bg-gray-50">
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center">
-                                        @if($item['product']->image)
-                                            <img src="{{ asset('storage/' . $item['product']->image) }}" alt="{{ $item['product']->name }}" class="w-12 h-12 object-cover rounded mr-4">
-                                        @endif
-                                        <a href="{{ route('products.show', $item['product']->slug) }}" class="hover:text-blue-600">
-                                            {{ $item['product']->name }}
-                                        </a>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">${{ number_format($item['product']->price, 2) }}</td>
-                                <td class="px-6 py-4">
-                                    <form action="{{ route('cart.update', $item['product']->id) }}" method="POST" class="flex items-center gap-2">
-                                        @csrf
-                                        @method('PATCH')
-                                        <input type="number" name="quantity" value="{{ $item['quantity'] }}" min="1" max="{{ $item['product']->stock }}" class="w-16 px-2 py-1 border border-gray-300 rounded">
-                                        <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
-                                            Update
-                                        </button>
-                                    </form>
-                                </td>
-                                <td class="px-6 py-4 font-bold">${{ number_format($item['subtotal'], 2) }}</td>
-                                <td class="px-6 py-4 text-center">
-                                    <form action="{{ route('cart.remove', $item['product']->id) }}" method="POST" onsubmit="return confirm('Remove from cart?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:text-red-800">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+<!-- Search & Category Filter (inline) -->
+<div class="mb-8 bg-white rounded-lg shadow-md p-6">
+    <form method="GET" action="{{ route('products.index') }}" class="flex flex-col md:flex-row md:items-center gap-4">
+        <div class="flex-1 flex gap-4">
+            <input
+                type="text"
+                name="search"
+                value="{{ $search ?? '' }}"
+                placeholder="Search products by name or description..."
+                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+
+            <select
+                name="category"
+                id="category"
+                class="w-56 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onchange="this.form.submit()"
+            >
+                <option value="">All Categories</option>
+                @foreach($categories as $cat)
+                    <option value="{{ $cat->slug ?? $cat->id }}" @if(($categoryId ?? null) == $cat->id || (isset($categoryParam) && $categoryParam == $cat->slug)) selected @endif>
+                        {{ $cat->name }}
+                    </option>
+                @endforeach
+            </select>
         </div>
 
-        <!-- Order Summary -->
-        <div class="bg-white rounded-lg shadow-lg p-6 h-fit">
-            <h2 class="text-2xl font-bold mb-6">Order Summary</h2>
+        <div class="flex items-center gap-4">
+            <button
+                type="submit"
+                class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+            >
+                <i class="fas fa-search mr-2"></i>Search
+            </button>
 
-            <div class="mb-6 space-y-3 pb-6 border-b">
-                <div class="flex justify-between">
-                    <span>Subtotal:</span>
-                    <span>${{ number_format($total, 2) }}</span>
-                </div>
-                <div class="flex justify-between">
-                    <span>Shipping:</span>
-                    <span class="text-green-600">Free</span>
-                </div>
-                <div class="flex justify-between">
-                    <span>Tax (estimated):</span>
-                    <span>${{ number_format($total * 0.1, 2) }}</span>
-                </div>
-            </div>
-
-            <div class="flex justify-between text-xl font-bold mb-6">
-                <span>Total:</span>
-                <span>${{ number_format($total * 1.1, 2) }}</span>
-            </div>
-
-            <!-- Checkout Form -->
-            <form action="{{ route('customer.checkout') }}" method="POST">
-                @csrf
-                <div class="mb-4">
-                    <label for="shipping_address" class="block font-bold mb-2">Shipping Address:</label>
-                    <textarea id="shipping_address" name="shipping_address" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg @error('shipping_address') border-red-500 @enderror" required placeholder="Enter your shipping address...">{{ old('shipping_address') }}</textarea>
-                    @error('shipping_address')
-                        <span class="text-red-600 text-sm">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <button type="submit" class="w-full bg-green-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-700 text-lg">
-                    <i class="fas fa-credit-card mr-2"></i> Checkout
-                </button>
-            </form>
-
-            <a href="{{ route('products.index') }}" class="block text-center mt-4 text-blue-600 hover:text-blue-800">
-                Continue Shopping
-            </a>
-
-            <form action="{{ route('cart.clear') }}" method="POST" class="mt-4">
-                @csrf
-                <button type="submit" class="w-full text-red-600 hover:text-red-800 py-2 border border-red-600 rounded-lg">
-                    Clear Cart
-                </button>
-            </form>
+            @if($search || ($categoryId ?? false) || (isset($categoryParam) && $categoryParam))
+                <a href="{{ route('products.index') }}" class="bg-gray-400 text-white px-6 py-2 rounded-lg hover:bg-gray-500">
+                    Clear
+                </a>
+            @endif
         </div>
+    </form>
+</div>
+
+<!-- Active Filters Display -->
+@if($search || $categoryId || (isset($categoryParam) && $categoryParam))
+    <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex justify-between items-center">
+        <div>
+            @if($search)
+                <p class="text-gray-700">Searching for: <strong>{{ $search }}</strong></p>
+            @endif
+            @if($categoryId || (isset($categoryParam) && $categoryParam))
+                @php
+                    $selectedCategory = $categories->find($categoryId) ?? $categories->firstWhere('slug', $categoryParam ?? null);
+                @endphp
+                <p class="text-gray-700">Category: <strong>{{ $selectedCategory->name ?? 'Unknown' }}</strong></p>
+            @endif
+        </div>
+        <a href="{{ route('products.index') }}" class="text-blue-600 hover:text-blue-800 underline text-sm">
+            Clear filters
+        </a>
+    </div>
+@endif
+
+@if($products->count() > 0)
+    <div class="mb-4 text-gray-600">
+        Showing <strong>{{ $products->count() }}</strong> of <strong>{{ $products->total() }}</strong> products
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        @foreach($products as $product)
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                @if($product->category)
+                    <div class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 m-2 inline-block rounded-full">
+                        {{ $product->category->name }}
+                    </div>
+                @endif
+
+                <div class="bg-gray-200 h-48 overflow-hidden">
+                    @if($product->image)
+                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                    @else
+                        <div class="w-full h-full flex items-center justify-center">
+                            <i class="fas fa-image text-gray-400 text-4xl"></i>
+                        </div>
+                    @endif
+                </div>
+
+                <div class="p-4">
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">{{ $product->name }}</h3>
+                    <p class="text-gray-600 text-sm mb-4">{{ Str::limit($product->description, 60) }}</p>
+
+                    @php
+                        $avgRating = $product->averageRating();
+                        $reviewCount = $product->reviews()->count();
+                    @endphp
+                    <div class="flex items-center mb-4">
+                        <div class="text-yellow-400">
+                            @for($i = 1; $i <= 5; $i++)
+                                @if($i <= floor($avgRating ?? 0))
+                                    <i class="fas fa-star"></i>
+                                @else
+                                    <i class="far fa-star"></i>
+                                @endif
+                            @endfor
+                        </div>
+                        <span class="text-gray-600 text-sm ml-2">({{ $reviewCount }})</span>
+                    </div>
+
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-2xl font-bold text-blue-600">${{ number_format($product->price, 2) }}</span>
+                        <span class="text-sm @if($product->stock > 0) text-green-600 @else text-red-600 @endif">
+                            {{ $product->stock > 0 ? 'In Stock' : 'Out of Stock' }}
+                        </span>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <a href="{{ route('products.show', $product->slug) }}" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-center">
+                            View Details
+                        </a>
+                        @if($product->stock > 0 && auth()->check() && auth()->user()->role === 'user')
+                            <form action="{{ route('cart.add') }}" method="POST" class="flex-1">
+                                @csrf
+                                <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                <input type="hidden" name="quantity" value="1">
+                                <button type="submit" class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                                    <i class="fas fa-cart-plus"></i>
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @endforeach
+    </div>
+
+    <div class="flex justify-center mt-8">
+        {{ $products->links() }}
     </div>
 @else
-    <div class="bg-white rounded-lg shadow-lg p-12 text-center">
-        <i class="fas fa-shopping-cart text-6xl text-gray-400 mb-6"></i>
-        <h2 class="text-2xl font-bold mb-4">Your cart is empty</h2>
-        <p class="text-gray-600 mb-6">Add some products to get started!</p>
-        <a href="{{ route('products.index') }}" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
-            Start Shopping
-        </a>
+    <div class="text-center py-12">
+        <i class="fas fa-inbox text-4xl text-gray-400 mb-4"></i>
+        <p class="text-gray-600 text-lg">No products found.</p>
     </div>
 @endif
 @endsection

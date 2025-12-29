@@ -6,6 +6,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Middleware\IsAdmin;
 use App\Http\Middleware\IsUser;
 
@@ -55,5 +56,14 @@ Route::middleware(['auth', 'verified', IsAdmin::class])->prefix('admin')->name('
     Route::get('/orders', [OrderController::class, 'adminIndex'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'adminShow'])->name('orders.show');
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
+
+    // Admin Routes - Categories Management
+    Route::resource('categories', CategoryController::class)->except(['show'])->names('categories');
+    Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+    Route::get('/categories/create', [CategoryController::class, 'create'])->name('categories.create');
+    Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
+    Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
+    Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
+    Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
 });
 

@@ -130,16 +130,22 @@
                 <div>
                     <h4 class="text-white font-bold mb-4">Customer Service</h4>
                     <ul class="text-sm space-y-2">
-                        <li><a href="#" class="hover:text-white">Contact Us</a></li>
+                        <li><a href="https://www.linkedin.com/in/sierlyptri/" class="hover:text-white">Contact Us</a></li>
                         <li><a href="#" class="hover:text-white">FAQ</a></li>
                     </ul>
                 </div>
                 <div>
                     <h4 class="text-white font-bold mb-4">Follow Us</h4>
                     <div class="flex space-x-4">
-                        <a href="#" class="hover:text-white"><i class="fab fa-facebook"></i></a>
-                        <a href="#" class="hover:text-white"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="hover:text-white"><i class="fab fa-instagram"></i></a>
+                        <a href="https://www.instagram.com/sierlyptri/" target="_blank" rel="noopener noreferrer" class="hover:text-white transition duration-200" title="Instagram">
+                            <i class="fab fa-instagram text-xl"></i>
+                        </a>
+                        <a href="https://www.linkedin.com/in/sierlyptri/" target="_blank" rel="noopener noreferrer" class="hover:text-white transition duration-200" title="LinkedIn">
+                            <i class="fab fa-linkedin text-xl"></i>
+                        </a>
+                        <a href="https://github.com/sierlyptri" target="_blank" rel="noopener noreferrer" class="hover:text-white transition duration-200" title="GitHub">
+                            <i class="fab fa-github text-xl"></i>
+                        </a>
                     </div>
                 </div>
             </div>
